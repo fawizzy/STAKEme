@@ -39,6 +39,9 @@ function useUserInfo() {
         parseAbiItem(
           "event RewardRateUpdated(uint256 oldRate,uint256 newRate,uint256 timestamp,uint256 totalStaked)"
         ),
+        parseAbiItem(
+          "event RewardsClaimed(address indexed user,uint256 amount,uint256 timestamp,uint256 newPendingRewards,uint256 totalStaked)"
+        ),
       ],
       onLogs: async () => {
         await fetchUserInfo();
