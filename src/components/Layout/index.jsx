@@ -7,7 +7,7 @@ const AppLayout = ({ children }) => {
       {/* Header */}
       <header className="h-20 border-b bg-white shadow-sm">
         <div className="container mx-auto flex justify-between items-center h-full px-6">
-          <span className="text-2xl font-bold text-amber-600">Cohort XIII</span>
+          <span className="text-2xl font-bold text-amber-600">STAKEnow</span>
           <ConnectButton />
         </div>
       </header>
@@ -22,7 +22,7 @@ const AppLayout = ({ children }) => {
       {/* Footer */}
       <footer className="h-16 bg-white border-t">
         <div className="container mx-auto flex items-center justify-center h-full text-sm text-gray-500">
-          &copy; Cohort XIII {new Date().getFullYear()}
+          &copy; STAKEnow {new Date().getFullYear()}
         </div>
       </footer>
 
