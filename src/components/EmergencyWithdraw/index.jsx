@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import useEmergencyWithdraw from "../../hooks/useEmergencyWithdrawal";
 
 function EmergencyWithdraw() {
-  const { emergencyWithdraw, status } = useEmergencyWithdraw();
+  const { emergencyWithdraw, status, isWithdrawing } = useEmergencyWithdraw();
 
   const handleEmergencyWithdraw = () => {
     if (status !== "success") {
@@ -19,8 +19,8 @@ function EmergencyWithdraw() {
       <p className="text-sm text-gray-500">
         Use only if you need to immediately withdraw all staked tokens.
       </p>
-      <Button variant="destructive" onClick={handleEmergencyWithdraw}>
-        Emergency Withdraw
+      <Button variant="destructive" onClick={handleEmergencyWithdraw} disabled={isWithdrawing}>
+        {isWithdrawing? "Withdrawing...": "Emergency Withdraw"}
       </Button>
     </div>
   );

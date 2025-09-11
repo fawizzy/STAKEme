@@ -1,11 +1,12 @@
-import React, { useCallback} from "react";
+import React, { useCallback, useState } from "react";
 import { usePublicClient, useWalletClient } from "wagmi";
 import { toast } from "sonner";
 import { STAKING_CONTRACT_ABI } from "../config/ABI";
 
 export function useClaimReward() {
   const publicClient = usePublicClient();
-  const {data, status} = useWalletClient();
+  const { data, status } = useWalletClient();
+  const [isClaiming, setIsClaiming] = useState(false);
 
   const claim = useCallback(
     async () => {
@@ -13,14 +14,14 @@ export function useClaimReward() {
       if (status !== "success") {
         toast.error("Wallet not connected");
         return;
-
       }
 
       try {
+        setIsClaiming(true);
+
         const simulateClaim = await publicClient.simulateCalls({
           account: data.account.address,
           calls: [
-          
             {
               to: import.meta.env.VITE_STAKING_CONTRACT,
               abi: STAKING_CONTRACT_ABI,
@@ -29,15 +30,11 @@ export function useClaimReward() {
           ],
         });
 
-
         if (simulateClaim.results[0].status === "failure") {
           toast.error("Withdrawal will fail", {
             description: simulateClaim.results[0].error.cause?.reason,
           });
-          // return;
         }
-
-       
 
         const claimTx = await data.writeContract({
           address: import.meta.env.VITE_STAKING_CONTRACT,
@@ -45,7 +42,6 @@ export function useClaimReward() {
           functionName: "claimRewards",
         });
 
-        
         const claimReceipt = await publicClient.waitForTransactionReceipt({
           hash: claimTx,
         });
@@ -56,7 +52,7 @@ export function useClaimReward() {
           });
         } else {
           toast.success("Withdraw successful", {
-            description: `Successfully claimed  tokens`,
+            description: `Successfully claimed tokens`,
           });
         }
       } catch (err) {
@@ -64,11 +60,14 @@ export function useClaimReward() {
         toast.error("Unexpected error", {
           description: err.shortMessage || err.message,
         });
+      } finally {
+        setIsClaiming(false);
       }
     },
-    [publicClient, data, status] 
+    [publicClient, data, status]
   );
 
-  return { claim, status };
+  return { claim, status, isClaiming };
 }
+
 export default useClaimReward;
