@@ -14,7 +14,6 @@ function useCurrentAPR() {
         functionName: "initialApr",
       });
 
-      console.log({_currentAPR})
 
      setCurrentAPR(_currentAPR)
 

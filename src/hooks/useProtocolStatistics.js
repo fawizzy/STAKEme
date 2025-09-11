@@ -7,43 +7,49 @@ function useProtocolStats() {
   const publicClient = usePublicClient();
   const [protocolStats, setProtocolStats] = useState();
 
- useEffect(() => {
+  useEffect(() => {
     if (!publicClient) return;
 
     const fetchStats = async () => {
-      const [totalStaked, totalRewards, currentRewardRate, currentAPR, aprReductionPerThousand, minLockDuration] =
-        await Promise.all([
-          publicClient.readContract({
-            address: import.meta.env.VITE_STAKING_CONTRACT,
-            abi: STAKING_CONTRACT_ABI,
-            functionName: "totalStaked",
-          }),
-          publicClient.readContract({
-            address: import.meta.env.VITE_STAKING_CONTRACT,
-            abi: STAKING_CONTRACT_ABI,
-            functionName: "getTotalRewards",
-          }),
-          publicClient.readContract({
-            address: import.meta.env.VITE_STAKING_CONTRACT,
-            abi: STAKING_CONTRACT_ABI,
-            functionName: "currentRewardRate",
-          }),
-          publicClient.readContract({
-            address: import.meta.env.VITE_STAKING_CONTRACT,
-            abi: STAKING_CONTRACT_ABI,
-            functionName: "initialApr",
-          }),
-          publicClient.readContract({
-            address: import.meta.env.VITE_STAKING_CONTRACT,
-            abi: STAKING_CONTRACT_ABI,
-            functionName: "aprReductionPerThousand",
-          }),
-          publicClient.readContract({
-            address: import.meta.env.VITE_STAKING_CONTRACT,
-            abi: STAKING_CONTRACT_ABI,
-            functionName: "minLockDuration",
-          }),
-        ]);
+      const [
+        totalStaked,
+        totalRewards,
+        currentRewardRate,
+        currentAPR,
+        aprReductionPerThousand,
+        minLockDuration,
+      ] = await Promise.all([
+        publicClient.readContract({
+          address: import.meta.env.VITE_STAKING_CONTRACT,
+          abi: STAKING_CONTRACT_ABI,
+          functionName: "totalStaked",
+        }),
+        publicClient.readContract({
+          address: import.meta.env.VITE_STAKING_CONTRACT,
+          abi: STAKING_CONTRACT_ABI,
+          functionName: "getTotalRewards",
+        }),
+        publicClient.readContract({
+          address: import.meta.env.VITE_STAKING_CONTRACT,
+          abi: STAKING_CONTRACT_ABI,
+          functionName: "currentRewardRate",
+        }),
+        publicClient.readContract({
+          address: import.meta.env.VITE_STAKING_CONTRACT,
+          abi: STAKING_CONTRACT_ABI,
+          functionName: "initialApr",
+        }),
+        publicClient.readContract({
+          address: import.meta.env.VITE_STAKING_CONTRACT,
+          abi: STAKING_CONTRACT_ABI,
+          functionName: "aprReductionPerThousand",
+        }),
+        publicClient.readContract({
+          address: import.meta.env.VITE_STAKING_CONTRACT,
+          abi: STAKING_CONTRACT_ABI,
+          functionName: "minLockDuration",
+        }),
+      ]);
 
       setProtocolStats({
         totalStaked,
@@ -57,32 +63,69 @@ function useProtocolStats() {
 
     fetchStats();
 
-    const unwatch = publicClient.watchEvent({
+    const unwatchStaked = publicClient.watchEvent({
       address: import.meta.env.VITE_STAKING_CONTRACT,
-      events: [
-        parseAbiItem(
-          "event Staked(address indexed user,uint256 amount,uint256 timestamp,uint256 newTotalStaked,uint256 currentRewardRate)"
-        ),
-        parseAbiItem(
-          "event Withdrawn(address indexed user,uint256 amount,uint256 timestamp,uint256 newTotalStaked,uint256 currentRewardRate,uint256 rewardsAccrued)"
-        ),
-        parseAbiItem(
-          "event EmergencyWithdrawn(address indexed user,uint256 amount,uint256 penalty,uint256 timestamp,uint256 newTotalStaked)"
-        ),
-        parseAbiItem(
-          "event RewardRateUpdated(uint256 oldRate,uint256 newRate,uint256 timestamp,uint256 totalStaked)"
-        ),
-      ],
+      event: parseAbiItem(
+        "event Staked(address indexed user,uint256 amount,uint256 timestamp,uint256 newTotalStaked,uint256 currentRewardRate)"
+      ),
       onLogs: async (logs) => {
-        console.log("Event log:", logs);
-        await fetchStats(); 
+        setProtocolStats((prev) => ({
+          ...prev,
+          totalStaked: logs[0].args.newTotalStaked,
+        }));
+      },
+    });
+
+    const unwatchWithdrawn = publicClient.watchEvent({
+      address: import.meta.env.VITE_STAKING_CONTRACT,
+      event: parseAbiItem(
+        "event Withdrawn(address indexed user,uint256 amount,uint256 timestamp,uint256 newTotalStaked,uint256 currentRewardRate,uint256 rewardsAccrued)"
+      ),
+      onLogs: async (logs) => {
+        // await fetchStats();
+        setProtocolStats((prev) => ({
+          ...prev,
+          totalStaked: logs[0].args.newTotalStaked,
+          totalRewards: prev.totalRewards - logs[0].args.rewardsAccrued,
+        }));
+      },
+    });
+
+    const unwatchEmergency = publicClient.watchEvent({
+      address: import.meta.env.VITE_STAKING_CONTRACT,
+      event: parseAbiItem(
+        "event EmergencyWithdrawn(address indexed user,uint256 amount,uint256 penalty,uint256 timestamp,uint256 newTotalStaked)"
+      ),
+      onLogs: async (logs) => {
+        // await fetchStats();
+        setProtocolStats((prev) => ({
+          ...prev,
+          totalStaked: logs[0].args.newTotalStaked,
+        }));
+      },
+    });
+
+    const unwatchRewardsClaimed = publicClient.watchEvent({
+      address: import.meta.env.VITE_STAKING_CONTRACT,
+      event: parseAbiItem(
+        "event RewardsClaimed(address indexed user,uint256 amount,uint256 timestamp,uint256 newPendingRewards,uint256 totalStaked)"
+      ),
+      onLogs: async (logs) => {
+        // console.log("reward claimed")
+        setProtocolStats((prev) => ({
+          ...prev,
+          totalRewards: prev.totalRewards - logs[0].args.amount,
+        }));
       },
     });
 
     return () => {
-      if (unwatch) unwatch();
+      unwatchStaked();
+      unwatchWithdrawn();
+      unwatchEmergency();
+      unwatchRewardsClaimed();
     };
-  }, [publicClient]);
+  }, [protocolStats, publicClient]);
 
   return useMemo(() => protocolStats, [protocolStats]);
 }

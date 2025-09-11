@@ -15,7 +15,7 @@ function ProtocolStats() {
     },
     {
       label: "Total Rewards",
-      value: `${Number(formatEther(protocolStats.totalRewards)).toFixed(5)} STT`,
+      value: `${Number(formatEther(protocolStats.totalRewards)).toFixed(0)} STT`,
     },
     {
       label: "Current APR",
@@ -23,15 +23,15 @@ function ProtocolStats() {
     },
     {
       label: "Reward Rate",
-      value: `${protocolStats.currentRewardRate.toString()} / sec`,
+      value: `${protocolStats.currentRewardRate.toString()} %`,
     },
     {
       label: "Min Lock Duration",
-      value: `${protocolStats.minLockDuration.toString()} sec`,
+      value: `${Math.floor(Number(protocolStats.minLockDuration) / (60 * 60 * 24))} days`,
     },
     {
       label: "APR Reduction / 1000",
-      value: `${protocolStats.aprReductionPerThousand.toString()} %`,
+      value: `${protocolStats.aprReductionPerThousand.toString()} `,
     },
   ];
 

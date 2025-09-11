@@ -2,11 +2,15 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatEther } from "viem";
 import useUserInfo from "../../hooks/useUserInfo";
+import { useWalletClient } from "wagmi";
 
 function UserInfo() {
   const userInfo = useUserInfo();
+  const walletClient = useWalletClient();
 
-  if (!userInfo) return null;
+  if (!userInfo || !walletClient?.data?.account?.address) return null;
+  
+  
 
   const stats = [
     {
@@ -19,13 +23,18 @@ function UserInfo() {
     },
     {
       label: "Last Stake",
-      value: new Date(
-        Number(userInfo.lastStakeTimestamp) * 1000
-      ).toLocaleString(),
+      value:
+        userInfo.lastStakeTimestamp && Number(userInfo.lastStakeTimestamp) !== 0
+          ? new Date(
+              Number(userInfo.lastStakeTimestamp) * 1000
+            ).toLocaleString()
+          : "Not staked yet",
     },
     {
       label: "Time Until Unlock",
-      value: `${userInfo.timeUntilUnlock.toString()} sec`,
+      value: `${Math.floor(
+        Number(userInfo.timeUntilUnlock) / (60 * 60 * 24)
+      )} days`,
     },
     {
       label: "Withdrawable?",
@@ -33,6 +42,7 @@ function UserInfo() {
       highlight: userInfo.canWithdraw ? "text-green-600" : "text-red-600",
     },
   ];
+
 
   return (
     <div className="bg-white rounded-xl shadow p-6 space-y-6">
@@ -49,7 +59,9 @@ function UserInfo() {
               </CardTitle>
             </CardHeader>
             <CardContent
-              className={`text-xl font-semibold text-gray-900 ${item.highlight || ""}`}
+              className={`text-xl font-semibold text-gray-900 ${
+                item.highlight || ""
+              }`}
             >
               {item.value}
             </CardContent>

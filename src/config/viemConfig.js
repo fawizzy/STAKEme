@@ -15,4 +15,3 @@ export const walletClient = createWalletClient({
 export const [account] = await walletClient.getAddresses()
 // export const w = await walletClient.requestAddresses()
 
-console.log(account)

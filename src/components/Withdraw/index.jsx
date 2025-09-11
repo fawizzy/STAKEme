@@ -5,7 +5,7 @@ import { useState } from "react";
 import useWithdraw from "../../hooks/useWithdraw";
 
 export function Withdraw() {
-  const { withdraw, status } = useWithdraw();
+  const { withdraw, status, isWithdrawing } = useWithdraw();
   const [amount, setAmount] = useState("");
 
   const handleWithdraw = () => {
@@ -32,7 +32,7 @@ export function Withdraw() {
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
         />
-        <Button onClick={handleWithdraw}>Withdraw</Button>
+        <Button className="bg-amber-600 hover:bg-amber-700 text-white flex-1 text-sm" onClick={handleWithdraw} disabled={isWithdrawing}>{isWithdrawing ? "Withdrawing...": "Withdraw"}</Button>
       </div>
     </div>
   );

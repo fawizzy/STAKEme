@@ -29,11 +29,12 @@ export function useClaimReward() {
           ],
         });
 
+
         if (simulateClaim.results[0].status === "failure") {
           toast.error("Withdrawal will fail", {
             description: simulateClaim.results[0].error.cause?.reason,
           });
-          return;
+          // return;
         }
 
        
@@ -44,6 +45,7 @@ export function useClaimReward() {
           functionName: "claimRewards",
         });
 
+        
         const claimReceipt = await publicClient.waitForTransactionReceipt({
           hash: claimTx,
         });

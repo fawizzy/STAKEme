@@ -1,14 +1,13 @@
-import React, { useCallback} from "react";
+import React, { useCallback, useState } from "react";
 import { usePublicClient, useWalletClient } from "wagmi";
 import { toast } from "sonner";
-// import { walletClient, account } from "../config/viemConfig";
-
-import { STAKING_CONTRACT_ABI, STAKING_TOKEN_ABI } from "../config/ABI";
+import { STAKING_CONTRACT_ABI } from "../config/ABI";
 import { parseEther } from "viem";
 
 export function useWithdraw() {
   const publicClient = usePublicClient();
-  const {data, status} = useWalletClient();
+  const { data, status } = useWalletClient();
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   const withdraw = useCallback(
     async (amount) => {
@@ -19,10 +18,11 @@ export function useWithdraw() {
       }
 
       try {
+        setIsWithdrawing(true);
+
         const simulateStake = await publicClient.simulateCalls({
           account: data.account.address,
           calls: [
-          
             {
               to: import.meta.env.VITE_STAKING_CONTRACT,
               abi: STAKING_CONTRACT_ABI,
@@ -38,8 +38,6 @@ export function useWithdraw() {
           });
           return;
         }
-
-       
 
         const withdrawTx = await data.writeContract({
           address: import.meta.env.VITE_STAKING_CONTRACT,
@@ -66,11 +64,13 @@ export function useWithdraw() {
         toast.error("Unexpected error", {
           description: err.shortMessage || err.message,
         });
+      } finally {
+        setIsWithdrawing(false);
       }
     },
-    [publicClient, data, status] 
+    [publicClient, data, status]
   );
 
-  return { withdraw, status };
+  return { withdraw, status, isWithdrawing };
 }
 export default useWithdraw;
